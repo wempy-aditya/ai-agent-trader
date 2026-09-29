@@ -1,0 +1,17 @@
+{
+  "source": "https://api.hyperliquid.xyz/info",
+  "provider": "Hyperliquid public info API",
+  "request": {
+    "coin": "BTC",
+    "interval": "1h",
+    "startTime": 1735689600000,
+    "endTime": 1767225600000
+  },
+  "date_range_utc": [
+    "2025-01-01T00:00:00Z",
+    "2026-01-01T00:00:00Z"
+  ],
+  "rows": 0,
+  "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "downloaded_at_utc": "2026-09-18T12:49:48.774370+00:00"
+}
