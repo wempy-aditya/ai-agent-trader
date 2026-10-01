@@ -19,10 +19,36 @@ from dashboard import DashboardState
 from dashboard_server import serve
 from hyperliquid_provider import HyperliquidBTC1hProvider
 from ledger_adapter import LocalPaperLedger
-from llm_agent import LocalLLMAgent
+from llm_agent import BACKEND_REMOTE, BaseAgent, build_agent
+from remote_llm import CONFIG_PATH, RemoteLLMConfig, load_remote_config, save_remote_config
 
 CONFIG = Path.home() / ".config/ai-trader/hermes-local.json"
 DATA = Path("data")
+
+
+def configure_remote(args) -> int:
+    if args.save_remote_config:
+        cfg = RemoteLLMConfig(
+            dialect=args.dialect,
+            base_url=args.base_url or "",
+            api_key=args.api_key or "",
+            model=args.model or "",
+            temperature=float(args.temperature),
+            max_tokens=int(args.max_tokens),
+            timeout=float(args.timeout),
+            enabled=True,
+        )
+        path = save_remote_config(cfg, args.config or CONFIG_PATH)
+        print(json.dumps({"saved": str(path), **cfg.redacted()}, indent=2, sort_keys=True))
+        return 0
+    if args.show_remote_config:
+        try:
+            print(json.dumps(load_remote_config(args.config or CONFIG_PATH).redacted(), indent=2, sort_keys=True))
+        except Exception as exc:
+            print(json.dumps({"error": str(exc)}))
+            return 1
+        return 0
+    return 0
 
 
 def load_ledger_client() -> LocalPaperLedger:
@@ -64,7 +90,17 @@ def ledger_positions(ledger: LocalPaperLedger) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--backend", choices=["ollama", BACKEND_REMOTE], default="ollama")
     parser.add_argument("--model", default="qwen2.5:7b")
+    parser.add_argument("--config", default="", help="remote LLM config path (mode 600)")
+    parser.add_argument("--save-remote-config", action="store_true")
+    parser.add_argument("--show-remote-config", action="store_true")
+    parser.add_argument("--dialect", choices=["openai", "systemone"], default="openai")
+    parser.add_argument("--base-url", default="")
+    parser.add_argument("--api-key", default="")
+    parser.add_argument("--temperature", type=float, default=0.2)
+    parser.add_argument("--max-tokens", type=int, default=400)
+    parser.add_argument("--timeout", type=float, default=45.0)
     parser.add_argument("--cycles", type=int, default=6)
     parser.add_argument("--interval-seconds", type=int, default=3600)
     parser.add_argument("--port", type=int, default=8788)
@@ -74,6 +110,9 @@ def main() -> int:
     parser.add_argument("--hold", action="store_true", help="keep dashboard alive after cycles finish")
     args = parser.parse_args()
 
+    if args.save_remote_config or args.show_remote_config:
+        return configure_remote(args)
+
     if args.execute and not args.i_understand_this_orders_paper:
         print(json.dumps({"stop_reason": "execute_requires_explicit_flag", "execute": True}))
         return 2
@@ -81,11 +120,16 @@ def main() -> int:
     DATA.mkdir(exist_ok=True)
     state = DashboardState(DATA / "agent_dashboard_state.json")
     provider = HyperliquidBTC1hProvider()
-    agent = LocalLLMAgent(model=args.model)
+    try:
+        agent: BaseAgent = build_agent(args.backend, args.model, args.config or None)
+    except Exception as exc:
+        state.update(status="llm_config_invalid", model=args.model)
+        print(json.dumps({"stop_reason": "llm_config_invalid", "detail": str(exc)}))
+        return 3
 
     if not agent.available():
-        state.update(status="llm_unavailable", model=args.model, execute=bool(args.execute))
-        print(json.dumps({"stop_reason": "llm_unavailable", "model": args.model}))
+        state.update(status="llm_unavailable", model=getattr(agent, "model_id", args.model), execute=bool(args.execute))
+        print(json.dumps({"stop_reason": "llm_unavailable", "backend": args.backend, "model": getattr(agent, "model_id", args.model)}))
         return 3
 
     ledger = None

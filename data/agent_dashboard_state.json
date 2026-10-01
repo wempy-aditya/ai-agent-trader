@@ -1,7 +1,7 @@
 {
-  "accepted": 1,
+  "accepted": 2,
   "cash": 991.836845,
-  "cycles": 1,
+  "cycles": 2,
   "errors": [],
   "execute": false,
   "executed": 0,
@@ -25,32 +25,52 @@
       "relation": "agree",
       "risk_reason": "hold",
       "validation": "valid"
+    },
+    {
+      "accepted": true,
+      "agent_action": "hold",
+      "agent_confidence": 0.3,
+      "agent_invalid_conditions": [],
+      "agent_reason_codes": [
+        "no_reason_given"
+      ],
+      "agent_signal_id": "hold_signal_1790852400",
+      "baseline_signal": "hold",
+      "candle_timestamp": 1790852400000,
+      "close": 83876.0,
+      "cycle": 2,
+      "executed": false,
+      "exposure_after": 8.3876,
+      "reason": "hold",
+      "relation": "agree",
+      "risk_reason": "hold",
+      "validation": "valid"
     }
   ],
   "invalid": 0,
   "last_cycle": {
     "accepted": true,
     "agent_action": "hold",
-    "agent_confidence": 0.5,
+    "agent_confidence": 0.3,
     "agent_invalid_conditions": [],
     "agent_reason_codes": [
       "no_reason_given"
     ],
-    "agent_signal_id": "hold_signal_1790848800",
+    "agent_signal_id": "hold_signal_1790852400",
     "baseline_signal": "hold",
-    "candle_timestamp": 1790848800000,
-    "close": 83928.0,
-    "cycle": 1,
+    "candle_timestamp": 1790852400000,
+    "close": 83876.0,
+    "cycle": 2,
     "executed": false,
-    "exposure_after": 8.3928,
+    "exposure_after": 8.3876,
     "reason": "hold",
     "relation": "agree",
     "risk_reason": "hold",
     "validation": "valid"
   },
   "live_trading": "DISABLED",
-  "mark_exposure": 8.3928,
-  "mark_price": 83928.0,
+  "mark_exposure": 8.3876,
+  "mark_price": 83876.0,
   "max_exposure": 500.0,
   "model": "qwen2.5:7b",
   "positions": [
@@ -63,5 +83,5 @@
       "symbol": "BTC"
     }
   ],
-  "status": "running"
+  "status": "stopped"
 }
