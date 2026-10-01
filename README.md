@@ -2,8 +2,29 @@
 
 Hermes × [HKUDS/AI-Trader](https://github.com/HKUDS/AI-Trader) client for BTC spot paper trading.
 
-Current phase: **P5.3 — paper dry-run disagreement soak complete**.
+Current phase: **Unified local agent + read-only dashboard (live)**.
 Live trading is disabled and this repo has no exchange or broker credentials.
+
+## Quick start — local LLM agent with dashboard
+
+```bash
+export PATH=/home/wempya/projects/AI-Trader/.venv/bin:$PATH
+cd /home/wempya/projects/AI-Trader-hermes-client
+PYTHONPATH=. python run_agent.py --model qwen2.5:7b --cycles 6 --hold
+```
+
+Dashboard: `http://127.0.0.1:8788/` (read-only; there is no order endpoint).
+
+Requires Ollama with a local model (`qwen2.5:7b` or `qwen2.5:1.5b`) and the upstream
+paper API running. Exit code `3` means Ollama is not reachable.
+
+Paper order mode needs **two** explicit flags:
+
+```bash
+PYTHONPATH=. python run_agent.py --cycles 6 --execute --i-understand-this-orders-paper
+```
+
+`--execute` alone exits `2` with `execute_requires_explicit_flag`.
 
 ## Safety boundaries
 
@@ -12,6 +33,9 @@ Live trading is disabled and this repo has no exchange or broker credentials.
 - Buy-only, BTC-only, 1h, no leverage, no short, no sell automation.
 - Risk engine sits outside strategy and outside any LLM.
 - LLM output is validated as a structured proposal before it can reach the risk gate.
+- The LLM cannot choose its own symbol, timeframe, candle, or baseline signal; a code sanitizer forces those fields.
+- LLM BUY size is capped at `0.0002` BTC and `2%` of equity; oversized requests are downgraded to HOLD.
+- If the LLM is unreachable or its output cannot be parsed, the cycle degrades to HOLD with a recorded reason.
 - Kill switch, duplicate-signal guard, exposure cap, daily-loss cap, stale-price and spread guards are enforced and tested.
 - Tokens are read from `~/.config/ai-trader/hermes-local.json` (mode `600`). Credentials are never stored in this repo.
 
@@ -64,6 +88,11 @@ agent_proposal.py        P5 structured LLM proposal validator
 p5_comparison.py         P5 baseline vs deterministic mock comparison
 p5_soak.py               P5.3 disagreement soak runner
 run_p5_soak.py           P5.3 live-candle dry-run entrypoint (execute=false)
+llm_agent.py             local Ollama structured proposal + sanitizer + fail-safe HOLD
+agent_loop.py            one full cycle: provider -> baseline -> LLM -> validator -> risk -> ledger
+dashboard.py             read-only dashboard state
+dashboard_server.py      read-only HTTP server (/ and /api/state)
+run_agent.py             unified agent CLI (loop + dashboard)
 ```
 
 ## Evidence artifacts
@@ -77,7 +106,13 @@ paper_execute_6cycle.jsonl    bounded execute observation evidence
 paper_execute_6cycle.audit.jsonl  matching audit records
 p5_soak.jsonl                 P5.3 disagreement soak evidence
 p5_soak.audit.jsonl           P5.3 matching audit records
+agent_live.jsonl              unified agent cycle evidence
+agent_live.audit.jsonl        unified agent risk audit
+agent_dashboard_state.json    read-only dashboard state
 ```
+
+State files and `*.state.json` are runtime artifacts; they are kept out of git via `.gitignore`
+only for caches, so they may appear in `data/` locally. They contain no credentials.
 
 ## P5.3 dry run
 
