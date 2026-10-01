@@ -2,7 +2,7 @@
 
 Hermes × [HKUDS/AI-Trader](https://github.com/HKUDS/AI-Trader) client for BTC spot paper trading.
 
-Current phase: **P5.2 — agent-assisted paper trading (design + schema + deterministic mock comparison)**.
+Current phase: **P5.3 — paper dry-run disagreement soak complete**.
 Live trading is disabled and this repo has no exchange or broker credentials.
 
 ## Safety boundaries
@@ -23,6 +23,17 @@ export PATH=/home/wempya/projects/AI-Trader/.venv/bin:$PATH
 
 Requires the pinned upstream clone at `/home/wempya/projects/AI-Trader`
 (commit `d03ff6c056b32ced735adf7c19ed8175adb1c8df`) plus its local API running.
+
+The upstream `.env` sets a **relative** `DB_PATH`, so the API must be started from the
+project root, not from `service/server`:
+
+```bash
+cd /home/wempya/projects/AI-Trader
+PYTHONPATH=service/server python service/server/main.py
+```
+
+Starting it from the wrong working directory silently uses a different SQLite file and
+every authenticated endpoint returns `401 Invalid token`.
 
 ## Tests
 
@@ -51,6 +62,8 @@ hyperliquid_provider.py  public BTC 1h candle provider
 signal_observation.py    closed-candle EMA signal builder
 agent_proposal.py        P5 structured LLM proposal validator
 p5_comparison.py         P5 baseline vs deterministic mock comparison
+p5_soak.py               P5.3 disagreement soak runner
+run_p5_soak.py           P5.3 live-candle dry-run entrypoint (execute=false)
 ```
 
 ## Evidence artifacts
@@ -62,7 +75,19 @@ btc_1h_last365d.json          5,000 clean BTC 1h candles (SHA-256 recorded in me
 fresh_observation_24h.jsonl   24 fresh-candle dry-run cycles
 paper_execute_6cycle.jsonl    bounded execute observation evidence
 paper_execute_6cycle.audit.jsonl  matching audit records
+p5_soak.jsonl                 P5.3 disagreement soak evidence
+p5_soak.audit.jsonl           P5.3 matching audit records
 ```
+
+## P5.3 dry run
+
+```bash
+export PATH=/home/wempya/projects/AI-Trader/.venv/bin:$PATH
+PYTHONPATH=. python run_p5_soak.py
+```
+
+`--execute` is refused with `execute_requires_explicit_ledger`. P5.4 bounded agent-assisted
+paper execute needs explicit user approval before it may write a paper order.
 
 ## P5 proposal schema v1
 
