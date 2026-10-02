@@ -147,6 +147,41 @@ def test_chat_json_notional_cap_forces_hold_on_small_equity():
     assert "buy_notional_capped" in payload["invalid_conditions"]
 
 
+def test_post_json_sends_named_user_agent():
+    """Cloudflare returns error 1010 to the default Python-urllib agent."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    from remote_llm import RemoteLLMConfig, remote_complete
+
+    seen = {}
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            return
+
+        def do_POST(self):
+            seen["ua"] = self.headers.get("User-Agent")
+            n = int(self.headers.get("Content-Length", 0))
+            self.rfile.read(n)
+            payload = json.dumps({"choices": [{"message": {"content": "ok"}}]}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+    server = HTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    cfg = RemoteLLMConfig(dialect="openai", base_url=f"http://127.0.0.1:{server.server_address[1]}", api_key="k", model="m", timeout=5.0)
+    try:
+        assert remote_complete(cfg, "ping") == "ok"
+    finally:
+        server.shutdown()
+    assert seen["ua"] and "Python-urllib" not in seen["ua"]
+    assert "ai-trader-hermes-client" in seen["ua"]
+
+
 def test_config_loader_reads_mode_600_file(tmp_path):
     from remote_llm import load_remote_config
 

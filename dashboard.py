@@ -9,7 +9,7 @@ MAX_HISTORY = 50
 
 
 class DashboardState:
-    def __init__(self, state_path: str | Path):
+    def __init__(self, state_path: str | Path, reset: bool = False) -> None:
         self.state_path = Path(state_path)
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         self.data: dict[str, Any] = {
@@ -30,7 +30,7 @@ class DashboardState:
             "history": [],
             "errors": [],
         }
-        if self.state_path.exists():
+        if self.state_path.exists() and not reset:
             try:
                 stored = json.loads(self.state_path.read_text(encoding="utf-8"))
                 if isinstance(stored, dict):

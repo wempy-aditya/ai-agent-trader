@@ -272,12 +272,23 @@ def _question_set() -> dict[str, Any]:
     }
 
 
+USER_AGENT = "ai-trader-hermes-client/1.0 (+local paper trading agent)"
+
+
 def _post_json(endpoint: str, body: dict[str, Any], cfg: RemoteLLMConfig) -> dict[str, Any]:
     data = json.dumps(body).encode("utf-8")
     request = Request(
         endpoint,
         data=data,
-        headers={"Authorization": f"Bearer {cfg.api_key}", "Content-Type": "application/json"},
+        headers={
+            "Authorization": f"Bearer {cfg.api_key}",
+            "Content-Type": "application/json",
+            # Some edge providers (Cloudflare in front of them) return error
+            # 1010 to the default Python-urllib agent. Naming ourselves keeps
+            # the request from being dropped before it reaches the API.
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json",
+        },
         method="POST",
     )
     try:

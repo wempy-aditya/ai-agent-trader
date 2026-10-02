@@ -118,19 +118,24 @@ def main() -> int:
         return 2
 
     DATA.mkdir(exist_ok=True)
-    state = DashboardState(DATA / "agent_dashboard_state.json")
     provider = HyperliquidBTC1hProvider()
     try:
         agent: BaseAgent = build_agent(args.backend, args.model, args.config or None)
     except Exception as exc:
-        state.update(status="llm_config_invalid", model=args.model)
+        DashboardState(DATA / "agent_dashboard_state.json").update(status="llm_config_invalid", model=args.model)
         print(json.dumps({"stop_reason": "llm_config_invalid", "detail": str(exc)}))
         return 3
 
+    # Report the model that actually answers, not the CLI default. With the
+    # remote backend the configured model can differ from --model.
+    active_model = getattr(agent, "model_id", args.model) or args.model
+
     if not agent.available():
-        state.update(status="llm_unavailable", model=getattr(agent, "model_id", args.model), execute=bool(args.execute))
-        print(json.dumps({"stop_reason": "llm_unavailable", "backend": args.backend, "model": getattr(agent, "model_id", args.model)}))
+        DashboardState(DATA / "agent_dashboard_state.json").update(status="llm_unavailable", model=active_model, execute=bool(args.execute))
+        print(json.dumps({"stop_reason": "llm_unavailable", "backend": args.backend, "model": active_model}))
         return 3
+
+    state = DashboardState(DATA / "agent_dashboard_state.json", reset=True)
 
     ledger = None
     ledger_error = None
@@ -156,7 +161,7 @@ def main() -> int:
 
     if not args.no_dashboard:
         threading.Thread(target=serve, args=(DATA / "agent_dashboard_state.json", "127.0.0.1", args.port), daemon=True).start()
-        state.update(status="running", model=args.model, execute=bool(args.execute))
+        state.update(status="running", model=active_model, execute=bool(args.execute))
 
     stop_reason = "max_cycles"
     for index in range(args.cycles):
