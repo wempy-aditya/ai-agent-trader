@@ -1,0 +1,29 @@
+{
+  "5000": {
+    "hypothesis_supported": false,
+    "regime_counts": {
+      "sideways": 7,
+      "trend": 25,
+      "unknown": 0
+    },
+    "sideways": {
+      "avg_forward_pct": -0.5765,
+      "entries": 7,
+      "max_forward_pct": 3.2942,
+      "median_forward_pct": 0.62,
+      "min_forward_pct": -4.8334
+    },
+    "sideways_minus_trend_pp": -1.8118,
+    "total_entries": 32.0,
+    "trend": {
+      "avg_forward_pct": 1.2353,
+      "entries": 25,
+      "max_forward_pct": 5.9706,
+      "median_forward_pct": 0.9255,
+      "min_forward_pct": -1.4335
+    },
+    "unknown": null
+  },
+  "forward_bars": 12,
+  "timeframe_minutes": 240
+}
