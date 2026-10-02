@@ -1,0 +1,64 @@
+{
+  "5000": {
+    "bars_test": 2000,
+    "bars_total": 5000,
+    "bars_train": 3000,
+    "selection_gap_pp": 0.0,
+    "test_buy_and_hold": {
+      "max_drawdown_pct": 4.421781067395185,
+      "return_pct": 14.618672057944316
+    },
+    "test_default": {
+      "costs_paid": 17.0292,
+      "edge_over_random_pp": 4.4592,
+      "entries": 17,
+      "losses": 5,
+      "max_drawdown_pct": 1.4557,
+      "random_avg_return_pct": -3.2437,
+      "return_pct": 1.2155,
+      "wins": 12
+    },
+    "test_oracle": {
+      "costs_paid": 16.0518,
+      "edge_over_random_pp": 5.1966,
+      "entries": 16,
+      "losses": 2,
+      "max_drawdown_pct": 1.0402,
+      "max_hold_bars": 48,
+      "near_low_max": 0.2,
+      "random_avg_return_pct": -1.6182,
+      "return_pct": 3.5784,
+      "rsi_oversold": 30.0,
+      "wins": 14
+    },
+    "test_tuned": {
+      "costs_paid": 16.0518,
+      "edge_over_random_pp": 5.1966,
+      "entries": 16,
+      "losses": 2,
+      "max_drawdown_pct": 1.0402,
+      "random_avg_return_pct": -1.6182,
+      "return_pct": 3.5784,
+      "wins": 14
+    },
+    "train_winner": {
+      "costs_paid": 29.4165,
+      "edge_over_random_pp": 0.4774,
+      "entries": 30,
+      "losses": 12,
+      "max_drawdown_pct": 12.4727,
+      "max_hold_bars": 48,
+      "near_low_max": 0.2,
+      "random_avg_return_pct": -11.0073,
+      "return_pct": -10.5299,
+      "rsi_oversold": 30.0,
+      "wins": 17
+    },
+    "tuned_beats_buy_and_hold": false,
+    "tuned_beats_default": true,
+    "verdict": "no edge"
+  },
+  "grid": 48,
+  "split": "chronological 60/40",
+  "timeframe_minutes": 60
+}

@@ -1,0 +1,174 @@
+{
+  "5000": {
+    "slices": [
+      {
+        "bars": 1000,
+        "buy_and_hold": {
+          "max_drawdown_pct": 6.953310555483423,
+          "return_pct": -0.6804903881816093
+        },
+        "default": {
+          "costs_paid": 10.9803,
+          "edge_over_random_pp": 0.4984,
+          "entries": 11,
+          "losses": 6,
+          "max_drawdown_pct": 4.1107,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -3.5671,
+          "return_pct": -3.0687,
+          "wins": 5
+        },
+        "start": 0,
+        "tuned": {
+          "costs_paid": 10.0022,
+          "edge_over_random_pp": 2.236,
+          "entries": 10,
+          "losses": 4,
+          "max_drawdown_pct": 2.6051,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -3.0138,
+          "return_pct": -0.7778,
+          "wins": 6
+        }
+      },
+      {
+        "bars": 1000,
+        "buy_and_hold": {
+          "max_drawdown_pct": 3.048885865358449,
+          "return_pct": 7.749357124234946
+        },
+        "default": {
+          "costs_paid": 5.4916,
+          "edge_over_random_pp": -0.4517,
+          "entries": 6,
+          "losses": 3,
+          "max_drawdown_pct": 2.1763,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -1.6918,
+          "return_pct": -2.1435,
+          "wins": 2
+        },
+        "start": 1000,
+        "tuned": {
+          "costs_paid": 5.5088,
+          "edge_over_random_pp": 0.8145,
+          "entries": 6,
+          "losses": 0,
+          "max_drawdown_pct": 1.1205,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -1.2347,
+          "return_pct": -0.4202,
+          "wins": 5
+        }
+      },
+      {
+        "bars": 1000,
+        "buy_and_hold": {
+          "max_drawdown_pct": 12.921427521227791,
+          "return_pct": -11.522881864643708
+        },
+        "default": {
+          "costs_paid": 13.941,
+          "edge_over_random_pp": -1.052,
+          "entries": 14,
+          "losses": 8,
+          "max_drawdown_pct": 8.4655,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -6.2374,
+          "return_pct": -7.2894,
+          "wins": 6
+        },
+        "start": 2000,
+        "tuned": {
+          "costs_paid": 12.4089,
+          "edge_over_random_pp": -2.8135,
+          "entries": 13,
+          "losses": 7,
+          "max_drawdown_pct": 11.0162,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -6.7762,
+          "return_pct": -9.5897,
+          "wins": 5
+        }
+      },
+      {
+        "bars": 1000,
+        "buy_and_hold": {
+          "max_drawdown_pct": 3.3900927537019565,
+          "return_pct": 3.7693712072143892
+        },
+        "default": {
+          "costs_paid": 9.0266,
+          "edge_over_random_pp": 3.6507,
+          "entries": 9,
+          "losses": 2,
+          "max_drawdown_pct": 1.1291,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -1.8925,
+          "return_pct": 1.7582,
+          "wins": 7
+        },
+        "start": 3000,
+        "tuned": {
+          "costs_paid": 8.0362,
+          "edge_over_random_pp": 4.196,
+          "entries": 8,
+          "losses": 1,
+          "max_drawdown_pct": 1.0402,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -1.3768,
+          "return_pct": 2.8192,
+          "wins": 7
+        }
+      },
+      {
+        "bars": 1000,
+        "buy_and_hold": {
+          "max_drawdown_pct": 4.280993928416028,
+          "return_pct": 9.961373768956893
+        },
+        "default": {
+          "costs_paid": 7.0056,
+          "edge_over_random_pp": 2.6129,
+          "entries": 7,
+          "losses": 2,
+          "max_drawdown_pct": 1.2254,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -2.7537,
+          "return_pct": -0.1408,
+          "wins": 5
+        },
+        "start": 4000,
+        "tuned": {
+          "costs_paid": 7.0151,
+          "edge_over_random_pp": 2.7983,
+          "entries": 7,
+          "losses": 1,
+          "max_drawdown_pct": 1.0571,
+          "max_exposure_used": 500.0,
+          "random_avg_return_pct": -1.9852,
+          "return_pct": 0.8131,
+          "wins": 6
+        }
+      }
+    ],
+    "totals": {
+      "beat_buy_and_hold": 1,
+      "beat_default": 4,
+      "beat_random": 4,
+      "buy_and_hold_avg_return_pct": 1.8553,
+      "default_avg_return_pct": -2.1768,
+      "random_avg_return_pct": -2.8773,
+      "slices_scored": 5,
+      "tuned_avg_return_pct": -1.4311,
+      "verdict": "no consistent edge vs buy-and-hold"
+    }
+  },
+  "frozen_params": {
+    "max_hold_bars": 48,
+    "near_low_max": 0.2,
+    "rsi_oversold": 30.0
+  },
+  "slice": 1000,
+  "timeframe_minutes": 60
+}
