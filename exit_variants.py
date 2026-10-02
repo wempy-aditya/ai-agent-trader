@@ -20,6 +20,7 @@ from entry_agent import build_exit_criteria
 from indicators import compute_indicators
 from replay import ReplayConfig, simulate_buy_and_hold
 from run_replay import load_candles
+from timeframe import TF_MINUTES, resample
 
 VARIANTS = ("ema", "trailing", "time_based", "momentum")
 
@@ -149,14 +150,21 @@ def run_variant(rows: list[dict[str, Any]], spec: ExitSpec, capital: float = 100
 
 
 def main() -> int:
-    windows = [int(x) for x in sys.argv[1:]] or [WINDOW]
+    windows = [int(x) for x in sys.argv[1:] if not x.startswith("-")] or [WINDOW]
+    tf_arg = next((x for x in sys.argv[1:] if x.startswith("--timeframe=")), None)
+    tf_minutes = TF_MINUTES[(tf_arg or "--timeframe=4h").split("=", 1)[1]]
     capital = ReplayConfig().initial_capital
     all_results: dict[str, Any] = {}
 
     for window in windows:
-        rows = load_candles(window)
+        source = load_candles(window)
+        rows = resample(source, tf_minutes)
+        if len(rows) < 120:
+            print(f"=== window {window} ({tf_minutes}m): only {len(rows)} bars, skipping ===")
+            continue
         bh = simulate_buy_and_hold(rows, ReplayConfig())
-        print(f"=== window {window}  capital {capital:.0f}  position {POSITION_VALUE:.0f} ===")
+        print(f"=== window {window}  tf {tf_minutes}m  {len(rows)} bars  "
+              f"capital {capital:.0f}  position {POSITION_VALUE:.0f} ===")
         print(f"buy_and_hold {bh['return_pct']:+.3f}%  maxDD {bh['max_drawdown_pct']:.3f}%")
         print(f"{'variant':11s} {'return':>9s} {'maxDD':>8s} {'rt':>4s} {'win':>4s} {'loss':>5s} {'cost':>8s}")
         results = []
@@ -172,7 +180,8 @@ def main() -> int:
     from pathlib import Path
 
     out = Path("data/exit_variants.json")
-    out.write_text(json.dumps({"position_value": POSITION_VALUE, "windows": all_results},
+    out.write_text(json.dumps({"position_value": POSITION_VALUE, "timeframe_minutes": tf_minutes,
+                               "windows": all_results},
                               indent=2, sort_keys=True), encoding="utf-8")
     print(f"wrote {out}")
     return 0

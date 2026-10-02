@@ -1,196 +1,199 @@
 {
   "position_value": 500.0,
+  "timeframe_minutes": 240,
   "windows": {
-    "1000": {
+    "10000": {
       "buy_and_hold": {
-        "costs_paid": 1.100964702391961,
-        "final_equity": 1099.613737689569,
+        "costs_paid": 1.0740595325726905,
+        "final_equity": 1072.7354730401178,
         "initial_capital": 1000.0,
         "label": "buy_and_hold",
         "losses": 0,
-        "max_drawdown_pct": 4.280993928416028,
+        "max_drawdown_pct": 15.875945511096571,
         "max_exposure_used": 500.0,
-        "return_pct": 9.961373768956893,
+        "return_pct": 7.273547304011774,
         "trades": 1,
         "wins": 1
       },
       "variants": [
         {
-          "costs_paid": 14.5883,
+          "costs_paid": 21.0679,
           "exit_reasons": {
-            "ema_bearish": 14
+            "ema_bearish": 21
           },
-          "losses": 9,
-          "max_drawdown_pct": 5.1316,
-          "return_pct": 7.3217,
-          "round_trips": 14,
+          "losses": 13,
+          "max_drawdown_pct": 10.4661,
+          "return_pct": 3.6348,
+          "round_trips": 21,
           "variant": "ema",
-          "wins": 5
+          "wins": 8
         },
         {
-          "costs_paid": 9.5627,
+          "costs_paid": 24.0527,
           "exit_reasons": {
-            "trailing_drop_0.03": 9
+            "trailing_drop_0.03": 24
           },
-          "losses": 6,
-          "max_drawdown_pct": 6.9442,
-          "return_pct": 5.6561,
-          "round_trips": 9,
+          "losses": 15,
+          "max_drawdown_pct": 11.2252,
+          "return_pct": 1.6644,
+          "round_trips": 24,
           "variant": "trailing",
-          "wins": 3
+          "wins": 9
         },
         {
-          "costs_paid": 25.0372,
+          "costs_paid": 40.9807,
           "exit_reasons": {
-            "max_hold_12": 25
+            "max_hold_12": 36,
+            "stop_loss": 5
           },
-          "losses": 13,
-          "max_drawdown_pct": 5.2592,
-          "return_pct": -0.032,
-          "round_trips": 25,
+          "losses": 22,
+          "max_drawdown_pct": 12.0528,
+          "return_pct": -8.0743,
+          "round_trips": 41,
           "variant": "time_based",
-          "wins": 12
+          "wins": 19
         },
         {
-          "costs_paid": 20.6069,
+          "costs_paid": 30.0958,
           "exit_reasons": {
-            "momentum_break": 20
+            "momentum_break": 30
+          },
+          "losses": 18,
+          "max_drawdown_pct": 8.3114,
+          "return_pct": 5.0753,
+          "round_trips": 30,
+          "variant": "momentum",
+          "wins": 12
+        }
+      ]
+    },
+    "20000": {
+      "buy_and_hold": {
+        "costs_paid": 1.0740595325726905,
+        "final_equity": 1072.7354730401178,
+        "initial_capital": 1000.0,
+        "label": "buy_and_hold",
+        "losses": 0,
+        "max_drawdown_pct": 15.875945511096571,
+        "max_exposure_used": 500.0,
+        "return_pct": 7.273547304011774,
+        "trades": 1,
+        "wins": 1
+      },
+      "variants": [
+        {
+          "costs_paid": 21.0679,
+          "exit_reasons": {
+            "ema_bearish": 21
           },
           "losses": 13,
-          "max_drawdown_pct": 4.0543,
-          "return_pct": 8.2803,
-          "round_trips": 20,
+          "max_drawdown_pct": 10.4661,
+          "return_pct": 3.6348,
+          "round_trips": 21,
+          "variant": "ema",
+          "wins": 8
+        },
+        {
+          "costs_paid": 24.0527,
+          "exit_reasons": {
+            "trailing_drop_0.03": 24
+          },
+          "losses": 15,
+          "max_drawdown_pct": 11.2252,
+          "return_pct": 1.6644,
+          "round_trips": 24,
+          "variant": "trailing",
+          "wins": 9
+        },
+        {
+          "costs_paid": 40.9807,
+          "exit_reasons": {
+            "max_hold_12": 36,
+            "stop_loss": 5
+          },
+          "losses": 22,
+          "max_drawdown_pct": 12.0528,
+          "return_pct": -8.0743,
+          "round_trips": 41,
+          "variant": "time_based",
+          "wins": 19
+        },
+        {
+          "costs_paid": 30.0958,
+          "exit_reasons": {
+            "momentum_break": 30
+          },
+          "losses": 18,
+          "max_drawdown_pct": 8.3114,
+          "return_pct": 5.0753,
+          "round_trips": 30,
+          "variant": "momentum",
+          "wins": 12
+        }
+      ]
+    },
+    "4000": {
+      "buy_and_hold": {
+        "costs_paid": 1.0805206829043161,
+        "final_equity": 1079.1901622214118,
+        "initial_capital": 1000.0,
+        "label": "buy_and_hold",
+        "losses": 0,
+        "max_drawdown_pct": 15.956237299089535,
+        "max_exposure_used": 500.0,
+        "return_pct": 7.919016222141173,
+        "trades": 1,
+        "wins": 1
+      },
+      "variants": [
+        {
+          "costs_paid": 17.0303,
+          "exit_reasons": {
+            "ema_bearish": 17
+          },
+          "losses": 13,
+          "max_drawdown_pct": 10.7467,
+          "return_pct": 0.4779,
+          "round_trips": 17,
+          "variant": "ema",
+          "wins": 4
+        },
+        {
+          "costs_paid": 18.9921,
+          "exit_reasons": {
+            "trailing_drop_0.03": 19
+          },
+          "losses": 15,
+          "max_drawdown_pct": 11.7683,
+          "return_pct": -3.6385,
+          "round_trips": 19,
+          "variant": "trailing",
+          "wins": 4
+        },
+        {
+          "costs_paid": 30.9485,
+          "exit_reasons": {
+            "max_hold_12": 28,
+            "stop_loss": 3
+          },
+          "losses": 17,
+          "max_drawdown_pct": 12.5912,
+          "return_pct": -9.793,
+          "round_trips": 31,
+          "variant": "time_based",
+          "wins": 14
+        },
+        {
+          "costs_paid": 24.047,
+          "exit_reasons": {
+            "momentum_break": 24
+          },
+          "losses": 17,
+          "max_drawdown_pct": 8.6386,
+          "return_pct": 1.096,
+          "round_trips": 24,
           "variant": "momentum",
           "wins": 7
-        }
-      ]
-    },
-    "2000": {
-      "buy_and_hold": {
-        "costs_paid": 1.1475843048843273,
-        "final_equity": 1146.186720579443,
-        "initial_capital": 1000.0,
-        "label": "buy_and_hold",
-        "losses": 0,
-        "max_drawdown_pct": 4.421781067395185,
-        "max_exposure_used": 499.99999999999994,
-        "return_pct": 14.618672057944316,
-        "trades": 1,
-        "wins": 1
-      },
-      "variants": [
-        {
-          "costs_paid": 37.5736,
-          "exit_reasons": {
-            "ema_bearish": 37
-          },
-          "losses": 26,
-          "max_drawdown_pct": 7.8523,
-          "return_pct": 2.4012,
-          "round_trips": 37,
-          "variant": "ema",
-          "wins": 11
-        },
-        {
-          "costs_paid": 17.5437,
-          "exit_reasons": {
-            "trailing_drop_0.03": 17
-          },
-          "losses": 12,
-          "max_drawdown_pct": 7.1409,
-          "return_pct": 2.5604,
-          "round_trips": 17,
-          "variant": "trailing",
-          "wins": 5
-        },
-        {
-          "costs_paid": 64.0384,
-          "exit_reasons": {
-            "max_hold_12": 64
-          },
-          "losses": 32,
-          "max_drawdown_pct": 7.5097,
-          "return_pct": -5.7658,
-          "round_trips": 64,
-          "variant": "time_based",
-          "wins": 32
-        },
-        {
-          "costs_paid": 54.6092,
-          "exit_reasons": {
-            "momentum_break": 54
-          },
-          "losses": 35,
-          "max_drawdown_pct": 7.4671,
-          "return_pct": 3.4086,
-          "round_trips": 54,
-          "variant": "momentum",
-          "wins": 19
-        }
-      ]
-    },
-    "5000": {
-      "buy_and_hold": {
-        "costs_paid": 1.073890554860549,
-        "final_equity": 1072.5666643056884,
-        "initial_capital": 1000.0,
-        "label": "buy_and_hold",
-        "losses": 0,
-        "max_drawdown_pct": 16.12870151662515,
-        "max_exposure_used": 500.0,
-        "return_pct": 7.256666430568837,
-        "trades": 1,
-        "wins": 1
-      },
-      "variants": [
-        {
-          "costs_paid": 101.4894,
-          "exit_reasons": {
-            "ema_bearish": 101
-          },
-          "losses": 77,
-          "max_drawdown_pct": 23.1733,
-          "return_pct": -15.6112,
-          "round_trips": 101,
-          "variant": "ema",
-          "wins": 24
-        },
-        {
-          "costs_paid": 45.5371,
-          "exit_reasons": {
-            "trailing_drop_0.03": 45
-          },
-          "losses": 27,
-          "max_drawdown_pct": 12.146,
-          "return_pct": -2.2979,
-          "round_trips": 45,
-          "variant": "trailing",
-          "wins": 18
-        },
-        {
-          "costs_paid": 167.9824,
-          "exit_reasons": {
-            "max_hold_12": 167,
-            "stop_loss": 1
-          },
-          "losses": 94,
-          "max_drawdown_pct": 29.0639,
-          "return_pct": -26.9614,
-          "round_trips": 168,
-          "variant": "time_based",
-          "wins": 74
-        },
-        {
-          "costs_paid": 151.5457,
-          "exit_reasons": {
-            "momentum_break": 151
-          },
-          "losses": 107,
-          "max_drawdown_pct": 26.0032,
-          "return_pct": -17.4824,
-          "round_trips": 151,
-          "variant": "momentum",
-          "wins": 44
         }
       ]
     }
