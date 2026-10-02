@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from entry_agent import EntryModeAgent
 from llm_agent import BACKEND_REMOTE, build_agent
 from replay import ReplayConfig, replay_candles, simulate_baseline, simulate_buy_and_hold
 
@@ -68,9 +69,48 @@ class DryAgent:
         }
 
 
+class GateAgent(EntryModeAgent):
+    """Deterministic entry-aware agent. No LLM, no API.
+
+    Answers from the entry gate alone: buy when every criterion holds, sell when
+    the position is open and the exit rule fires. This is the floor the LLM has to
+    beat, and it costs nothing to measure.
+    """
+
+    model_id = "gate-only-control"
+
+    def __init__(self):
+        super().__init__(model_id=self.model_id)
+
+    def propose(self, candle_timestamp: int, close: float, baseline_signal: str, context: dict[str, Any] | None = None, equity: float = 1000.0, has_position: bool = False, entry_price: float | None = None) -> dict[str, Any]:
+        if has_position:
+            # Holding is the default. Selling every bar would churn the fees away.
+            action = "sell" if self.should_force_exit(self.build_exit_criteria(context, True, entry_price)) else "hold"
+        elif all(self.build_criteria(context).values()):
+            action = "buy"
+        else:
+            action = "hold"
+        return {
+            "schema_version": "p5.v1",
+            "signal_id": f"gate-{candle_timestamp}",
+            "candle_timestamp": candle_timestamp,
+            "symbol": "BTC",
+            "timeframe": "1h",
+            "action": action,
+            "quantity": 0.0002 if action == "buy" else 0.0,
+            "reference_price": close if action == "buy" else 0.0,
+            "confidence": 0.6 if action != "hold" else 0.3,
+            "reason_codes": ["gate_control"],
+            "invalid_conditions": [],
+            "baseline_signal": baseline_signal,
+            "model_id": self.model_id,
+        }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--backend", choices=["ollama", BACKEND_REMOTE, "dry"], default="dry")
+    parser.add_argument("--backend", choices=["ollama", BACKEND_REMOTE, "dry", "gate"], default="dry")
+    parser.add_argument("--entry-mode", action="store_true", help="wrap the backend in the deterministic entry gate")
     parser.add_argument("--model", default="qwen2.5:7b")
     parser.add_argument("--config", default="")
     parser.add_argument("--limit", type=int, default=200, help="how many trailing candles to replay")
@@ -89,6 +129,8 @@ def main() -> int:
 
     if args.backend == "dry":
         agent: Any = DryAgent()
+    elif args.backend == "gate":
+        agent = GateAgent()
     else:
         try:
             agent = build_agent(args.backend, args.model, args.config or None)
@@ -106,6 +148,16 @@ def main() -> int:
                 return original(**kwargs)
 
             agent.propose = throttled  # type: ignore[method-assign]
+
+    if args.entry_mode:
+        if hasattr(agent, "build_criteria"):
+            print(json.dumps({"stop_reason": "backend_already_entry_aware"}))
+            return 3
+        backend = agent
+        agent = EntryModeAgent(
+            model_id=f"{getattr(backend, 'model_id', args.model)}-entry",
+            complete=backend.complete,
+        )
 
     started = time.time()
     baseline = simulate_baseline(candles, config)

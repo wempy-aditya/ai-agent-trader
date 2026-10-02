@@ -1,0 +1,14 @@
+{
+  "bars_checked": 1900,
+  "baseline_buy_signals": 18,
+  "buy_and_hold_return_pct": 14.618672057944316,
+  "criteria_all_true": 387,
+  "criteria_all_true_pct": 20.368,
+  "gate_entries": 38,
+  "gate_exits": 37,
+  "gate_losses": 26,
+  "gate_max_dd_pct": 7.8523,
+  "gate_return_pct": 2.4012,
+  "gate_wins": 11,
+  "window": 2000
+}

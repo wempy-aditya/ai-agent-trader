@@ -117,6 +117,9 @@ class BaseAgent:
 
     model_id: str = "unknown"
 
+    def __init__(self, complete: Callable[[str], str] | None = None):
+        self._complete = complete
+
     def build_schema_hint(self) -> tuple[str, ...]:
         return SCHEMA_KEYS
 
@@ -192,6 +195,10 @@ class BaseAgent:
     def available(self) -> bool:
         return True
 
+    def complete(self, prompt: str) -> str:
+        """Raw completion hook. Used when this agent is wrapped by EntryModeAgent."""
+        return self._complete(prompt)
+
     def propose(self, candle_timestamp: int, close: float, baseline_signal: str, context: dict[str, Any] | None = None, equity: float = 1000.0) -> dict[str, Any]:
         raise NotImplementedError
 
@@ -199,20 +206,25 @@ class BaseAgent:
 class LocalLLMAgent(BaseAgent):
     """Local Ollama backend."""
 
-    def __init__(self, model: str = "qwen2.5:7b", host: str = OLLAMA_HOST, timeout: float = 60.0, complete: Callable[[str, dict], str] | None = None):
+    def complete(self, prompt: str) -> str:
+        """Raw completion hook. Used when this agent is wrapped by EntryModeAgent."""
+        return self._complete(prompt)
+
+    def __init__(self, model: str = "qwen2.5:7b", host: str = OLLAMA_HOST, timeout: float = 60.0, complete: Callable[[str], str] | None = None):
         self.model = model
         self.model_id = model
         self.host = host.rstrip("/")
         self.timeout = timeout
         self._complete = complete or self._ollama_complete
 
-    def _ollama_complete(self, prompt: str, options: dict) -> str:
+    def _ollama_complete(self, prompt: str, options: dict[str, Any] | None = None) -> str:
+        opts = options or {}
         body = json.dumps({
             "model": self.model,
             "prompt": prompt,
             "stream": False,
             "format": "json",
-            "options": {"temperature": options.get("temperature", 0.2)},
+            "options": {"temperature": opts.get("temperature", 0.2)},
         }).encode()
         request = Request(self.host + "/api/generate", data=body, headers={"Content-Type": "application/json"}, method="POST")
         with urlopen(request, timeout=self.timeout) as response:
@@ -248,6 +260,10 @@ class RemoteLLMAgent(BaseAgent):
 
     def describe(self) -> dict[str, Any]:
         return self.config.redacted()
+
+    def complete(self, prompt: str) -> str:
+        """Raw completion hook. Used when this agent is wrapped by EntryModeAgent."""
+        return self._complete(prompt)
 
     def available(self) -> bool:
         return bool(self.config.api_key and self.config.model and self.config.base_url)

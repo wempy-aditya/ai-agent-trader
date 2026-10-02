@@ -199,9 +199,15 @@ def replay_candles(
     config: ReplayConfig = ReplayConfig(),
     on_decision: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
-    """Walk the candles once, ask the agent each step, paper-fill its BUYs."""
+    """Walk the candles once, ask the agent each step, paper-fill its BUYs.
+
+    When the agent supports entry and exit, the walk tracks an open position and
+    closes it on a sell, so the return covers a full round trip rather than one
+    leg. When it does not, the walk stays long-only and buys at most once.
+    """
     from baseline import Candle, detect_signal
 
+    entry_aware = hasattr(agent, "build_criteria")
     history: list[Candle] = []
     cash = config.initial_capital
     quantity = 0.0
@@ -210,7 +216,7 @@ def replay_candles(
     costs = 0.0
     cycles = hold = buy = invalid = executed = disagreement = 0
     agreement = 0
-    wins = losses = 0
+    wins = losses = trades = 0
     curve: list[float] = []
     agent_buys = 0
 
@@ -231,14 +237,18 @@ def replay_candles(
         baseline_signal = detect_signal(window, has_position=quantity > 0)
 
         context = _context_for(window)
+        ask_kwargs: dict[str, Any] = {
+            "candle_timestamp": int(candle["timestamp"]),
+            "close": price,
+            "baseline_signal": baseline_signal,
+            "context": context,
+            "equity": cash,
+        }
+        if entry_aware:
+            ask_kwargs["has_position"] = quantity > 0
+            ask_kwargs["entry_price"] = entry if quantity > 0 else None
         try:
-            proposal = ask(
-                candle_timestamp=int(candle["timestamp"]),
-                close=price,
-                baseline_signal=baseline_signal,
-                context=context,
-                equity=cash,
-            )
+            proposal = ask(**ask_kwargs)
         except Exception as exc:  # noqa: BLE001 - a broken agent must not kill the run
             invalid += 1
             if on_decision:
@@ -248,8 +258,28 @@ def replay_candles(
 
         action = str(proposal.get("action", "hold"))
         conditions = list(proposal.get("invalid_conditions") or [])
-        blocked = {"action_not_allowed", "buy_notional_capped", "buy_fields_invalid", "llm_output_unparseable"}
-        if action not in {"hold", "buy"} or (conditions and set(conditions) & blocked):
+        blocked = {
+            "action_not_allowed", "buy_notional_capped", "buy_fields_invalid",
+            "llm_output_unparseable", "entry_criteria_not_met", "buy_with_position",
+        }
+        if action == "sell" and entry_aware and quantity > 0 and not (set(conditions) & blocked):
+            hold += 1
+            if baseline_signal == "buy":
+                agreement += 1
+            else:
+                disagreement += 1
+            fill = config.sell_price(price)
+            proceeds = quantity * fill
+            fee = proceeds * config.fee_per_side
+            cash += (proceeds - fee)
+            costs += fee
+            if proceeds > quantity * entry:
+                wins += 1
+            else:
+                losses += 1
+            trades += 1
+            quantity = 0.0
+        elif action not in {"hold", "buy", "sell"} or (conditions and set(conditions) & blocked):
             invalid += 1
         elif action == "buy":
             buy += 1
@@ -274,6 +304,7 @@ def replay_candles(
                     entry = price
                     peak_exposure = max(peak_exposure, cost)
                     executed += 1
+                    trades += 1
         else:
             hold += 1
             if baseline_signal == "buy":
@@ -314,7 +345,7 @@ def replay_candles(
         "max_drawdown_pct": round(_drawdown_pct(curve, config.initial_capital), 4),
         "max_exposure_used": round(peak_exposure, 4),
         "costs_paid": round(costs, 4),
-        "trades": executed,
+        "trades": trades,
         "wins": wins,
         "losses": losses,
     }

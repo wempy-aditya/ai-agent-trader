@@ -12,11 +12,13 @@ import json
 import threading
 import time
 from pathlib import Path
+from typing import Any
 from urllib.request import Request, urlopen
 
 from agent_loop import AgentTradingLoop
 from dashboard import DashboardState
 from dashboard_server import serve
+from entry_agent import EntryModeAgent
 from hyperliquid_provider import HyperliquidBTC1hProvider
 from ledger_adapter import LocalPaperLedger
 from llm_agent import BACKEND_REMOTE, BaseAgent, build_agent
@@ -91,6 +93,7 @@ def ledger_positions(ledger: LocalPaperLedger) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=["ollama", BACKEND_REMOTE], default="ollama")
+    parser.add_argument("--entry-mode", action="store_true", help="require the deterministic entry gate before a BUY survives")
     parser.add_argument("--model", default="qwen2.5:7b")
     parser.add_argument("--config", default="", help="remote LLM config path (mode 600)")
     parser.add_argument("--save-remote-config", action="store_true")
@@ -120,7 +123,7 @@ def main() -> int:
     DATA.mkdir(exist_ok=True)
     provider = HyperliquidBTC1hProvider()
     try:
-        agent: BaseAgent = build_agent(args.backend, args.model, args.config or None)
+        agent: Any = build_agent(args.backend, args.model, args.config or None)
     except Exception as exc:
         DashboardState(DATA / "agent_dashboard_state.json").update(status="llm_config_invalid", model=args.model)
         print(json.dumps({"stop_reason": "llm_config_invalid", "detail": str(exc)}))
@@ -129,6 +132,16 @@ def main() -> int:
     # Report the model that actually answers, not the CLI default. With the
     # remote backend the configured model can differ from --model.
     active_model = getattr(agent, "model_id", args.model) or args.model
+
+    if args.entry_mode:
+        # Wrap the backend so a BUY only survives when the deterministic entry
+        # gate agrees. The model still explains and still proposes, but the bar
+        # for entry is set by code, not by model confidence.
+        agent = EntryModeAgent(
+            model_id=f"{active_model}-entry",
+            complete=agent.complete,
+        )
+        active_model = agent.model_id
 
     if not agent.available():
         DashboardState(DATA / "agent_dashboard_state.json").update(status="llm_unavailable", model=active_model, execute=bool(args.execute))

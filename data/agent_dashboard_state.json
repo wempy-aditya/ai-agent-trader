@@ -9,25 +9,23 @@
     {
       "accepted": true,
       "agent_action": "hold",
-      "agent_confidence": 0.22,
-      "agent_invalid_conditions": [
-        "close_equals_24h_high_resistance",
-        "missing_indicator_data",
-        "no_volume_confirmation"
-      ],
+      "agent_confidence": 0.72,
+      "agent_invalid_conditions": [],
       "agent_reason_codes": [
-        "baseline_hold",
-        "price_at_24h_high",
-        "no_confirmed_breakout",
-        "thin_edge"
+        "rsi_overbought",
+        "rsi_out_of_band",
+        "range_24h_high",
+        "entry_gate_failed",
+        "ema_spread_positive",
+        "trend_up_intact"
       ],
-      "agent_signal_id": "sig-1790906400000-btc-1h-001",
+      "agent_signal_id": "btc-1h-1790910000000-hold-01",
       "baseline_signal": "hold",
-      "candle_timestamp": 1790906400000,
-      "close": 85163.0,
+      "candle_timestamp": 1790910000000,
+      "close": 85481.0,
       "cycle": 1,
       "executed": false,
-      "exposure_after": 8.5163,
+      "exposure_after": 8.5481,
       "reason": "hold",
       "relation": "agree",
       "risk_reason": "hold",
@@ -38,35 +36,33 @@
   "last_cycle": {
     "accepted": true,
     "agent_action": "hold",
-    "agent_confidence": 0.22,
-    "agent_invalid_conditions": [
-      "close_equals_24h_high_resistance",
-      "missing_indicator_data",
-      "no_volume_confirmation"
-    ],
+    "agent_confidence": 0.72,
+    "agent_invalid_conditions": [],
     "agent_reason_codes": [
-      "baseline_hold",
-      "price_at_24h_high",
-      "no_confirmed_breakout",
-      "thin_edge"
+      "rsi_overbought",
+      "rsi_out_of_band",
+      "range_24h_high",
+      "entry_gate_failed",
+      "ema_spread_positive",
+      "trend_up_intact"
     ],
-    "agent_signal_id": "sig-1790906400000-btc-1h-001",
+    "agent_signal_id": "btc-1h-1790910000000-hold-01",
     "baseline_signal": "hold",
-    "candle_timestamp": 1790906400000,
-    "close": 85163.0,
+    "candle_timestamp": 1790910000000,
+    "close": 85481.0,
     "cycle": 1,
     "executed": false,
-    "exposure_after": 8.5163,
+    "exposure_after": 8.5481,
     "reason": "hold",
     "relation": "agree",
     "risk_reason": "hold",
     "validation": "valid"
   },
   "live_trading": "DISABLED",
-  "mark_exposure": 8.5163,
-  "mark_price": 85163.0,
+  "mark_exposure": 8.5481,
+  "mark_price": 85481.0,
   "max_exposure": 500.0,
-  "model": "project-model",
+  "model": null,
   "positions": [
     {
       "entry_price": 81550.0,
@@ -77,5 +73,5 @@
       "symbol": "BTC"
     }
   ],
-  "status": "running"
+  "status": "stopped"
 }

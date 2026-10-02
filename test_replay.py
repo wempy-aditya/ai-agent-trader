@@ -124,3 +124,90 @@ def test_replay_result_has_no_credential_fields():
     blob = json.dumps(result).lower()
     for word in ("api_key", "token", "password", "secret", "bearer"):
         assert word not in blob
+
+
+class EntryStub:
+    """Entry-aware stub: buys only when the entry criteria are all true."""
+
+    model_id = "entry-stub"
+
+    def available(self):
+        return True
+
+    def build_criteria(self, context):
+        from entry_agent import entry_criteria
+
+        return entry_criteria(context)
+
+    def build_exit_criteria(self, context, has_position=False, entry_price=None):
+        from entry_agent import build_exit_criteria
+
+        return build_exit_criteria(context, has_position, entry_price)
+
+    def propose(self, candle_timestamp, close, baseline_signal, context=None, equity=1000.0, has_position=False, entry_price=None):
+        from entry_agent import entry_criteria
+
+        criteria = entry_criteria(context)
+        if has_position:
+            action = "sell"
+        elif all(criteria.values()):
+            action = "buy"
+        else:
+            action = "hold"
+        return {
+            "schema_version": "p5.v1", "signal_id": f"e-{candle_timestamp}",
+            "candle_timestamp": candle_timestamp, "symbol": "BTC", "timeframe": "1h",
+            "action": action, "quantity": 0.0002 if action == "buy" else 0.0,
+            "reference_price": close if action == "buy" else 0.0,
+            "confidence": 0.6, "reason_codes": ["stub"], "invalid_conditions": [],
+            "baseline_signal": baseline_signal, "model_id": self.model_id,
+        }
+
+
+def wavy_candles(count=500, start=100.0, drift=0.0004, vol=0.004, seed=7):
+    """Deterministic random walk with realistic bar-to-bar noise.
+
+    A pure sine wave is not usable here: it pins RSI at its extremes, so the
+    entry criteria can never all hold. Real BTC bars wander, which is what makes
+    RSI sit in the mid band often enough to trade.
+    """
+    import random
+
+    rng = random.Random(seed)
+    out = []
+    price = start
+    for i in range(count):
+        price = max(1.0, price * (1.0 + drift + rng.gauss(0.0, vol)))
+        out.append({
+            "timestamp": 1_700_000_000_000 + i * 3_600_000,
+            "open": price,
+            "high": price * 1.004,
+            "low": price * 0.996,
+            "close": price,
+        })
+    return out
+
+
+def test_entry_aware_replay_can_buy_and_sell_a_round_trip():
+    candles = wavy_candles(500)
+    result = replay_candles(candles, EntryStub(), ReplayConfig())
+    assert result["trades"] >= 2  # at least one round trip
+    assert result["wins"] + result["losses"] >= 1
+
+
+def test_entry_aware_replay_passes_position_state_to_the_agent():
+    seen = []
+
+    class Recorder(EntryStub):
+        def propose(self, candle_timestamp, close, baseline_signal, context=None, equity=1000.0, has_position=False, entry_price=None):
+            seen.append(has_position)
+            return super().propose(candle_timestamp, close, baseline_signal, context, equity, has_position, entry_price)
+
+    replay_candles(wavy_candles(500), Recorder(), ReplayConfig())
+    assert True in seen  # it did open a position at some point
+
+
+def test_entry_aware_replay_never_holds_two_positions():
+    candles = wavy_candles(500)
+    result = replay_candles(candles, EntryStub(), ReplayConfig())
+    assert result["max_exposure_used"] <= ReplayConfig().max_exposure * 1.0001
