@@ -1,0 +1,195 @@
+{
+  "5000": {
+    "bars": 1250,
+    "buy_and_hold": {
+      "costs_paid": 1.0740595325726905,
+      "final_equity": 1072.7354730401178,
+      "initial_capital": 1000.0,
+      "label": "buy_and_hold",
+      "losses": 0,
+      "max_drawdown_pct": 15.875945511096571,
+      "max_exposure_used": 500.0,
+      "return_pct": 7.273547304011774,
+      "trades": 1,
+      "wins": 1
+    },
+    "mean_reversion": {
+      "costs_paid": 15.0163,
+      "entries": 15,
+      "exit_reasons": {
+        "max_hold": 4,
+        "rsi_recovered": 8,
+        "stop_loss": 3
+      },
+      "final_equity": 1001.2932,
+      "initial_capital": 1000.0,
+      "label": "mean_reversion",
+      "losses": 6,
+      "max_drawdown_pct": 7.2076,
+      "max_exposure_used": 500.0,
+      "open_at_end": 0.0,
+      "return_pct": 0.1293,
+      "round_trips": 15,
+      "wins": 9
+    },
+    "random_timing": [
+      {
+        "costs_paid": 26.9476,
+        "entries": 27,
+        "exit_reasons": {
+          "max_hold": 3,
+          "rsi_recovered": 19,
+          "stop_loss": 5
+        },
+        "final_equity": 920.6647,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 11,
+        "max_drawdown_pct": 9.5407,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -7.9335,
+        "round_trips": 27,
+        "wins": 16
+      },
+      {
+        "costs_paid": 28.972,
+        "entries": 29,
+        "exit_reasons": {
+          "max_hold": 1,
+          "rsi_recovered": 23,
+          "stop_loss": 5
+        },
+        "final_equity": 943.0052,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 13,
+        "max_drawdown_pct": 9.4298,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -5.6995,
+        "round_trips": 29,
+        "wins": 16
+      },
+      {
+        "costs_paid": 25.9787,
+        "entries": 26,
+        "exit_reasons": {
+          "max_hold": 1,
+          "rsi_recovered": 22,
+          "stop_loss": 3
+        },
+        "final_equity": 952.7081,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 12,
+        "max_drawdown_pct": 7.7273,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -4.7292,
+        "round_trips": 26,
+        "wins": 14
+      },
+      {
+        "costs_paid": 26.9692,
+        "entries": 27,
+        "exit_reasons": {
+          "max_hold": 2,
+          "rsi_recovered": 21,
+          "stop_loss": 4
+        },
+        "final_equity": 942.2412,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 12,
+        "max_drawdown_pct": 8.9135,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -5.7759,
+        "round_trips": 27,
+        "wins": 15
+      },
+      {
+        "costs_paid": 28.984,
+        "entries": 29,
+        "exit_reasons": {
+          "max_hold": 1,
+          "rsi_recovered": 25,
+          "stop_loss": 3
+        },
+        "final_equity": 955.0107,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 15,
+        "max_drawdown_pct": 8.1934,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -4.4989,
+        "round_trips": 29,
+        "wins": 14
+      },
+      {
+        "costs_paid": 24.9904,
+        "entries": 25,
+        "exit_reasons": {
+          "max_hold": 2,
+          "rsi_recovered": 19,
+          "stop_loss": 4
+        },
+        "final_equity": 965.3963,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 7,
+        "max_drawdown_pct": 7.7088,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -3.4604,
+        "round_trips": 25,
+        "wins": 18
+      },
+      {
+        "costs_paid": 23.9739,
+        "entries": 24,
+        "exit_reasons": {
+          "max_hold": 1,
+          "rsi_recovered": 18,
+          "stop_loss": 5
+        },
+        "final_equity": 949.9494,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 9,
+        "max_drawdown_pct": 8.1544,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -5.0051,
+        "round_trips": 24,
+        "wins": 15
+      },
+      {
+        "costs_paid": 25.9399,
+        "entries": 26,
+        "exit_reasons": {
+          "max_hold": 2,
+          "rsi_recovered": 18,
+          "stop_loss": 6
+        },
+        "final_equity": 913.9203,
+        "initial_capital": 1000.0,
+        "label": "random_timing",
+        "losses": 10,
+        "max_drawdown_pct": 12.4691,
+        "max_exposure_used": 500.0,
+        "open_at_end": 0.0,
+        "return_pct": -8.608,
+        "round_trips": 26,
+        "wins": 16
+      }
+    ],
+    "random_timing_avg_return_pct": -5.7138,
+    "random_timing_max_return_pct": -3.4604,
+    "random_timing_min_return_pct": -8.608
+  },
+  "position_value": 500.0,
+  "timeframe_minutes": 240
+}
