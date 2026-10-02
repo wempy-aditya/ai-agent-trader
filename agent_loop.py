@@ -10,6 +10,7 @@ from agent_proposal import ProposalValidationError, validate_agent_proposal
 from audit_store import AuditStore
 from baseline import Candle, detect_signal
 from fresh_polling import CandlePoller
+from indicators import compute_indicators
 from paper_loop import PaperLoop, PaperLoopConfig
 from risk import RiskDecision, RiskLimits, TradeProposal
 
@@ -98,15 +99,12 @@ class AgentTradingLoop:
             return AgentCycleResult(False, polled.reason)
         candle = polled.candle
         rows = self.provider.recent_closed(now_ms, count=100)
-        history = [Candle(r["timestamp"], r["open"], r["high"], r["low"], r["close"]) for r in rows if r["timestamp"] <= candle["timestamp"]]
-        closes = [c.close for c in history]
+        history_rows = [r for r in rows if r["timestamp"] <= candle["timestamp"]]
+        history = [Candle(r["timestamp"], r["open"], r["high"], r["low"], r["close"]) for r in history_rows]
         baseline_signal = detect_signal(history, has_position=open_position_quantity > 0)
-        context = {
-            "closed_candles": len(history),
-            "last_close": candle["close"],
-            "recent_high_24": max(closes[-24:]) if closes else candle["close"],
-            "recent_low_24": min(closes[-24:]) if closes else candle["close"],
-        }
+        # Give the LLM real numbers. Without these it guesses and flags
+        # missing_indicator_data, which measures our input, not its skill.
+        context = compute_indicators(history_rows)
 
         raw = self.agent.propose(
             candle_timestamp=int(candle["timestamp"]),
