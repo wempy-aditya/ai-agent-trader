@@ -64,13 +64,13 @@ PAGE = """<!DOCTYPE html>
 <script>
 const fmt = (v, d=2) => (v === null || v === undefined) ? '-' : Number(v).toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d});
 
-// Equity curve. Initial capital is always the baseline line, so the chart shows
-// profit above it and loss below it rather than an arbitrary scale.
+// Equity curve. The baseline is this session's first reading, not the nominal
+// capital: an inherited position would otherwise draw as if this agent earned it.
 function drawChart(s) {
   const svg = document.getElementById('chart');
   const note = document.getElementById('chartnote');
   const pts = (s.equity_curve || []).map(p => p.equity).filter(v => typeof v === 'number');
-  const cap = Number(s.initial_capital || 1000);
+  const cap = Number(s.baseline_equity || s.initial_capital || 1000);
   if (pts.length < 2) {
     svg.innerHTML = '<text x="500" y="115" fill="#6e7681" text-anchor="middle" font-size="13">collecting equity points...</text>';
     note.textContent = 'The curve starts once the agent has completed two cycles.';
@@ -113,9 +113,11 @@ function render(s) {
   const cls = pnl === null ? '' : (pnl >= 0 ? 'gain' : 'loss');
   const cards = [
     ['equity (USDT)', '<span class="' + cls + '">' + fmt(s.equity, 2) + '</span>'],
-    ['P/L (USDT)', '<span class="' + cls + '">' + (pnl === null ? '-' : (pnl >= 0 ? '+' : '') + fmt(pnl, 2)) + '</span>'],
+    ['P/L this session', '<span class="' + cls + '">' + (pnl === null ? '-' : (pnl >= 0 ? '+' : '') + fmt(pnl, 2)) + '</span>'],
     ['return', '<span class="' + cls + '">' + (s.return_pct === null || s.return_pct === undefined ? '-' : (s.return_pct >= 0 ? '+' : '') + fmt(s.return_pct, 2) + '%') + '</span>'],
+    ['P/L vs 1000 start', fmt(s.total_pnl_usdt, 2)],
     ['max drawdown', fmt(s.max_drawdown_pct, 2) + '%'],
+    ['session baseline', fmt(s.baseline_equity, 2)],
     ['cash (USDT)', fmt(s.cash, 2)],
     ['mark price', fmt(s.mark_price, 1)],
     ['exposure / cap', fmt(s.mark_exposure, 2) + ' / ' + fmt(s.max_exposure, 0)],

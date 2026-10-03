@@ -58,10 +58,14 @@ def test_equity_curve_is_capped(tmp_path):
 
 def test_return_and_pnl_are_reported_beside_the_curve(tmp_path):
     state = DashboardState(tmp_path / "s.json", initial_capital=1000.0)
+    # Equity = cash + marked position value. Only mark_exposure changes here,
+    # which is what actually moves equity; a price change alone does not,
+    # because exposure is already marked at the current price upstream.
     state.record_equity({"cash": 950.0, "mark_price": 80_000.0, "mark_exposure": 100.0})
-    state.record_equity({"cash": 950.0, "mark_price": 81_000.0, "mark_exposure": 100.0})
+    state.record_equity({"cash": 950.0, "mark_price": 81_000.0, "mark_exposure": 150.0})
+    assert state.data["equity"] == 1100.0
     assert state.data["pnl_usdt"] == 50.0
-    assert state.data["return_pct"] == 5.0
+    assert state.data["return_pct"] == round(50 / 1050 * 100, 4)
 
 
 def test_equity_is_none_until_the_first_reading(tmp_path):
@@ -190,3 +194,44 @@ def test_no_stray_temp_or_lock_files_are_left_behind(tmp_path):
     state.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 0.0})
     names = sorted(p.name for p in tmp_path.iterdir())
     assert names == ["s.json", "s.json.lock"]
+
+
+# P/L must measure this session, not an inherited position. The local ledger can
+# already hold BTC from an earlier test run, and reporting that gain as the
+# agent's profit is simply false.
+
+
+def test_pnl_starts_at_zero_regardless_of_nominal_capital(tmp_path):
+    state = DashboardState(tmp_path / "s.json", initial_capital=1000.0)
+    # Equity is already 1010 because of a pre-existing position.
+    state.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 10.0})
+    assert state.data["pnl_usdt"] == 0.0
+    assert state.data["baseline_equity"] == 1010.0
+
+
+def test_pnl_then_measures_the_session(tmp_path):
+    state = DashboardState(tmp_path / "s.json", initial_capital=1000.0)
+    state.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 10.0})
+    state.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 25.0}, force=True)
+    assert state.data["pnl_usdt"] == 15.0
+
+
+def test_the_inherited_total_stays_visible_separately(tmp_path):
+    state = DashboardState(tmp_path / "s.json", initial_capital=1000.0)
+    state.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 10.0})
+    state.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 25.0}, force=True)
+    # This session added 15 (10 -> 25 exposure). The nominal capital is 1000,
+    # so total_pnl_usdt is 25, not 35: nothing else moved.
+    assert state.data["pnl_usdt"] == 15.0
+    assert state.data["total_pnl_usdt"] == 25.0
+
+
+def test_a_reopened_state_keeps_the_original_baseline(tmp_path):
+    path = tmp_path / "s.json"
+    first = DashboardState(path, initial_capital=1000.0)
+    first.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 10.0})
+    first.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 30.0}, force=True)
+    reopened = DashboardState(path, initial_capital=1000.0)
+    reopened.record_equity({"cash": 1000.0, "mark_price": 1.0, "mark_exposure": 40.0}, force=True)
+    assert reopened.data["baseline_equity"] == 1010.0
+    assert reopened.data["pnl_usdt"] == 30.0

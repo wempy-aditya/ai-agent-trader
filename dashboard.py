@@ -159,14 +159,29 @@ class DashboardState:
         # that has not been charted yet still raises the high-water mark.
         peak = max([p["equity"] for p in curve if isinstance(p.get("equity"), (int, float))]
                    + [equity, self.initial_capital])
+
+        # Baseline is the first equity reading of this session, not the nominal
+        # capital. A ledger can already hold a position from an earlier test
+        # run, and measuring against 1,000.00 would report that old position's
+        # gain as this agent's profit. Both numbers stay visible so neither is
+        # mistaken for the other.
+        baseline = self.data.get("baseline_equity")
+        if not isinstance(baseline, (int, float)):
+            baseline = equity
+            self.data["baseline_equity"] = round(equity, 4)
+            self.data["baseline_at_ms"] = ledger.get("at_ms")
+
+        # Write via self.data directly. Calling self.update() here would re-enter
+        # the lock and re-read the file, discarding the baseline set above.
         self.data.update({
             "cash": round(float(cash), 4) if isinstance(cash, (int, float)) else None,
             "positions": ledger.get("positions", []),
             "mark_price": ledger.get("mark_price"),
             "mark_exposure": round(float(exposure), 4) if isinstance(exposure, (int, float)) else None,
             "equity": round(equity, 4),
-            "pnl_usdt": round(equity - self.initial_capital, 4),
-            "return_pct": round((equity / self.initial_capital - 1) * 100, 4),
+            "pnl_usdt": round(equity - baseline, 4),
+            "return_pct": round((equity / baseline - 1) * 100, 4) if baseline else 0.0,
+            "total_pnl_usdt": round(equity - self.initial_capital, 4),
             "peak_equity": round(peak, 4),
             "max_drawdown_pct": round(max(0.0, (peak - equity) / peak * 100), 4) if peak else 0.0,
             "equity_curve": curve,
