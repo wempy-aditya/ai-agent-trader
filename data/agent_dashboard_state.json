@@ -1,7 +1,22 @@
 {
-  "accepted": 4,
-  "cash": 991.836845,
-  "cycles": 4,
+  "accepted": 2,
+  "cash": 991.8368,
+  "cycles": 2,
+  "equity": 1000.3109,
+  "equity_curve": [
+    {
+      "at_ms": 1791069484442,
+      "cash": 991.8368,
+      "equity": 1000.3109,
+      "mark_price": 84741.0
+    },
+    {
+      "at_ms": 1791070088229,
+      "cash": 991.8368,
+      "equity": 1000.3109,
+      "mark_price": 84741.0
+    }
+  ],
   "errors": [],
   "execute": false,
   "executed": 0,
@@ -9,25 +24,23 @@
     {
       "accepted": true,
       "agent_action": "hold",
-      "agent_confidence": 0.22,
-      "agent_invalid_conditions": [
-        "close_equals_24h_high_resistance",
-        "missing_indicator_data",
-        "no_volume_confirmation"
-      ],
+      "agent_confidence": 0.82,
+      "agent_invalid_conditions": [],
       "agent_reason_codes": [
-        "baseline_hold",
-        "price_at_24h_high",
-        "no_confirmed_breakout",
-        "thin_edge"
+        "momentum_not_positive",
+        "price_below_ema20",
+        "closes_below_ema20",
+        "closes_below_ema50",
+        "rsi_neutral",
+        "no_position"
       ],
-      "agent_signal_id": "sig-1790906400000-btc-1h-001",
+      "agent_signal_id": "p5-1791064800000-btc1h-hold-01",
       "baseline_signal": "hold",
-      "candle_timestamp": 1790906400000,
-      "close": 85163.0,
+      "candle_timestamp": 1791064800000,
+      "close": 84741.0,
       "cycle": 1,
       "executed": false,
-      "exposure_after": 8.5163,
+      "exposure_after": 8.4741,
       "reason": "hold",
       "relation": "agree",
       "risk_reason": "hold",
@@ -36,121 +49,64 @@
     {
       "accepted": true,
       "agent_action": "hold",
-      "agent_confidence": 0.28,
-      "agent_invalid_conditions": [
-        "baseline_turns_buy",
-        "close_below_83388_support",
-        "trend_alignment_confirmed",
-        "volatility_expansion"
-      ],
+      "agent_confidence": 0.82,
+      "agent_invalid_conditions": [],
       "agent_reason_codes": [
+        "momentum_not_positive",
+        "price_below_ema20",
+        "entry_gate_failed",
+        "no_open_position",
         "baseline_hold",
-        "price_at_24h_high",
-        "no_entry_edge",
-        "insufficient_data_edge"
+        "rsi_neutral"
       ],
-      "agent_signal_id": "btc-1h-1790910000000-p5-01",
+      "agent_signal_id": "p5-1791064800000-btc1h-001",
       "baseline_signal": "hold",
-      "candle_timestamp": 1790910000000,
-      "close": 85481.0,
-      "cycle": 2,
+      "candle_timestamp": 1791064800000,
+      "close": 84741.0,
+      "cycle": 1,
       "executed": false,
-      "exposure_after": 8.5481,
-      "reason": "hold",
-      "relation": "agree",
-      "risk_reason": "hold",
-      "validation": "valid"
-    },
-    {
-      "accepted": true,
-      "agent_action": "hold",
-      "agent_confidence": 0.28,
-      "agent_invalid_conditions": [
-        "baseline_signal_bullish",
-        "missing_indicator_series",
-        "price_breaks_below_recent_low_83388",
-        "risk_reward_unfavorable_at_high"
-      ],
-      "agent_reason_codes": [
-        "baseline_hold",
-        "price_at_24h_high",
-        "no_confirmed_momentum",
-        "candles_100",
-        "indicator_data_missing"
-      ],
-      "agent_signal_id": "btc-1h-1790913600000-hold-7f3a",
-      "baseline_signal": "hold",
-      "candle_timestamp": 1790913600000,
-      "close": 86627.0,
-      "cycle": 3,
-      "executed": false,
-      "exposure_after": 8.6627,
-      "reason": "hold",
-      "relation": "agree",
-      "risk_reason": "hold",
-      "validation": "valid"
-    },
-    {
-      "accepted": true,
-      "agent_action": "hold",
-      "agent_confidence": 0.18,
-      "agent_invalid_conditions": [
-        "missing_indicator_data",
-        "price_above_86627",
-        "price_below_83388"
-      ],
-      "agent_reason_codes": [
-        "baseline_hold",
-        "no_edge_confirmed",
-        "range_bound_24h",
-        "mid_range_price"
-      ],
-      "agent_signal_id": "sig-1790917200000-btc-1h-0001",
-      "baseline_signal": "hold",
-      "candle_timestamp": 1790917200000,
-      "close": 85972.0,
-      "cycle": 4,
-      "executed": false,
-      "exposure_after": 8.5972,
+      "exposure_after": 8.4741,
       "reason": "hold",
       "relation": "agree",
       "risk_reason": "hold",
       "validation": "valid"
     }
   ],
+  "initial_capital": 1000.0,
   "invalid": 0,
   "last_cycle": {
     "accepted": true,
     "agent_action": "hold",
-    "agent_confidence": 0.18,
-    "agent_invalid_conditions": [
-      "missing_indicator_data",
-      "price_above_86627",
-      "price_below_83388"
-    ],
+    "agent_confidence": 0.82,
+    "agent_invalid_conditions": [],
     "agent_reason_codes": [
+      "momentum_not_positive",
+      "price_below_ema20",
+      "entry_gate_failed",
+      "no_open_position",
       "baseline_hold",
-      "no_edge_confirmed",
-      "range_bound_24h",
-      "mid_range_price"
+      "rsi_neutral"
     ],
-    "agent_signal_id": "sig-1790917200000-btc-1h-0001",
+    "agent_signal_id": "p5-1791064800000-btc1h-001",
     "baseline_signal": "hold",
-    "candle_timestamp": 1790917200000,
-    "close": 85972.0,
-    "cycle": 4,
+    "candle_timestamp": 1791064800000,
+    "close": 84741.0,
+    "cycle": 1,
     "executed": false,
-    "exposure_after": 8.5972,
+    "exposure_after": 8.4741,
     "reason": "hold",
     "relation": "agree",
     "risk_reason": "hold",
     "validation": "valid"
   },
   "live_trading": "DISABLED",
-  "mark_exposure": 8.5972,
-  "mark_price": 85972.0,
+  "mark_exposure": 8.4741,
+  "mark_price": 84741.0,
+  "max_drawdown_pct": 0.0,
   "max_exposure": 500.0,
-  "model": "project-model",
+  "model": "project-model-entry",
+  "peak_equity": 1000.3109,
+  "pnl_usdt": 0.3109,
   "positions": [
     {
       "entry_price": 81550.0,
@@ -161,5 +117,10 @@
       "symbol": "BTC"
     }
   ],
-  "status": "stopped"
+  "return_pct": 0.0311,
+  "sampler_error": null,
+  "sampler_errors": 0,
+  "sampler_last_equity_ms": 1791070088229,
+  "started_at_ms": 1791070088228,
+  "status": "running"
 }

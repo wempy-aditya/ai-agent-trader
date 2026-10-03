@@ -1,7 +1,9 @@
 """Read-only paper dashboard server. Serves state JSON and a static page."""
 from __future__ import annotations
 
+import errno
 import json
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -27,6 +29,10 @@ PAGE = """<!DOCTYPE html>
   .card .k { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
   .card .v { font-size: 18px; color: #e6edf3; margin-top: 4px; word-break: break-all; }
   h2 { font-size: 13px; color: #8b949e; text-transform: uppercase; letter-spacing: .05em; margin: 22px 0 8px; }
+  .gain { color: #3fb950; } .loss { color: #f85149; }
+  #chart { width: 100%; height: 220px; background: #161b22; border: 1px solid #21262d; border-radius: 6px; display: block; }
+  .chartwrap { position: relative; }
+  .chartnote { color: #6e7681; font-size: 12px; margin-top: 6px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #21262d; vertical-align: top; }
   th { color: #8b949e; font-weight: 500; }
@@ -46,6 +52,9 @@ PAGE = """<!DOCTYPE html>
 </header>
 <main>
   <div class="cards" id="cards"></div>
+  <h2>Equity and P/L</h2>
+  <div class="chartwrap"><svg id="chart" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg></div>
+  <p class="chartnote" id="chartnote"></p>
   <h2>Position</h2>
   <div id="positions"></div>
   <h2>Cycle log</h2>
@@ -54,11 +63,60 @@ PAGE = """<!DOCTYPE html>
 </main>
 <script>
 const fmt = (v, d=2) => (v === null || v === undefined) ? '-' : Number(v).toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d});
+
+// Equity curve. Initial capital is always the baseline line, so the chart shows
+// profit above it and loss below it rather than an arbitrary scale.
+function drawChart(s) {
+  const svg = document.getElementById('chart');
+  const note = document.getElementById('chartnote');
+  const pts = (s.equity_curve || []).map(p => p.equity).filter(v => typeof v === 'number');
+  const cap = Number(s.initial_capital || 1000);
+  if (pts.length < 2) {
+    svg.innerHTML = '<text x="500" y="115" fill="#6e7681" text-anchor="middle" font-size="13">collecting equity points...</text>';
+    note.textContent = 'The curve starts once the agent has completed two cycles.';
+    return;
+  }
+  const all = pts.concat([cap]);
+  let lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+  if (hi === lo) { hi += 1; lo -= 1; }
+  const pad = (hi - lo) * 0.15; lo -= pad; hi += pad;
+  const W = 1000, H = 220, top = 10, bottom = 20;
+  const x = i => (i / (pts.length - 1)) * W;
+  const y = v => top + (1 - (v - lo) / (hi - lo)) * (H - top - bottom);
+  const baseY = y(cap);
+  const last = pts[pts.length - 1];
+  const up = last >= cap;
+  const color = up ? '#3fb950' : '#f85149';
+  const line = pts.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  const area = line + ' L' + W + ' ' + baseY.toFixed(1) + ' L0 ' + baseY.toFixed(1) + ' Z';
+  const grid = [0, .5, 1].map(f => {
+    const gy = top + f * (H - top - bottom);
+    return '<line x1="0" y1="' + gy.toFixed(1) + '" x2="' + W + '" y2="' + gy.toFixed(1) + '" stroke="#21262d" stroke-width="1"/>';
+  }).join('');
+  svg.innerHTML = grid +
+    '<rect x="0" y="' + top + '" width="' + W + '" height="' + Math.max(0, baseY - top).toFixed(1) + '" fill="' + color + '" opacity="0.07"/>' +
+    '<line x1="0" y1="' + baseY.toFixed(1) + '" x2="' + W + '" y2="' + baseY.toFixed(1) + '" stroke="#6e7681" stroke-width="1" stroke-dasharray="4 4"/>' +
+    '<path d="' + area + '" fill="' + color + '" opacity="0.12"/>' +
+    '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round"/>' +
+    '<circle cx="' + W + '" cy="' + y(last).toFixed(1) + '" r="4" fill="' + color + '"/>' +
+    '<text x="8" y="16" fill="#8b949e" font-size="11">hi ' + fmt(hi) + '</text>' +
+    '<text x="8" y="212" fill="#8b949e" font-size="11">lo ' + fmt(lo) + '</text>' +
+    '<text x="992" y="' + Math.max(14, baseY - 6).toFixed(1) + '" fill="#8b949e" font-size="11" text-anchor="end">start ' + fmt(cap) + '</text>';
+  note.textContent = pts.length + ' points. Dashed line = starting capital ' + fmt(cap) + ' USDT. ' +
+    'Latest ' + fmt(last, 2) + ' USDT (' + (up ? '+' : '') + fmt(last - cap) + ' USDT).';
+}
+
 function render(s) {
   document.getElementById('model').textContent = 'model: ' + (s.model || '-');
   document.getElementById('status').textContent = 'status: ' + (s.status || '-');
+  const pnl = (s.pnl_usdt === null || s.pnl_usdt === undefined) ? null : Number(s.pnl_usdt);
+  const cls = pnl === null ? '' : (pnl >= 0 ? 'gain' : 'loss');
   const cards = [
-    ['cash (USDT)', fmt(s.cash, 4)],
+    ['equity (USDT)', '<span class="' + cls + '">' + fmt(s.equity, 2) + '</span>'],
+    ['P/L (USDT)', '<span class="' + cls + '">' + (pnl === null ? '-' : (pnl >= 0 ? '+' : '') + fmt(pnl, 2)) + '</span>'],
+    ['return', '<span class="' + cls + '">' + (s.return_pct === null || s.return_pct === undefined ? '-' : (s.return_pct >= 0 ? '+' : '') + fmt(s.return_pct, 2) + '%') + '</span>'],
+    ['max drawdown', fmt(s.max_drawdown_pct, 2) + '%'],
+    ['cash (USDT)', fmt(s.cash, 2)],
     ['mark price', fmt(s.mark_price, 1)],
     ['exposure / cap', fmt(s.mark_exposure, 2) + ' / ' + fmt(s.max_exposure, 0)],
     ['cycles', s.cycles],
@@ -67,6 +125,7 @@ function render(s) {
   ];
   document.getElementById('cards').innerHTML = cards.map(([k, v]) =>
     '<div class="card"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>').join('');
+  drawChart(s);
   const p = (s.positions || []);
   document.getElementById('positions').innerHTML = p.length ? '<table><tr><th>sym</th><th>qty</th><th>entry</th><th>ledger px</th><th>pnl</th></tr>' +
     p.map(x => '<tr><td>' + x.symbol + '</td><td>' + x.quantity + '</td><td>' + fmt(x.entry_price,1) + '</td><td>' + fmt(x.ledger_current_price,1) + '</td><td>' + fmt(x.ledger_pnl,4) + '</td></tr>').join('') + '</table>'
@@ -116,3 +175,24 @@ def make_handler(state_path: Path):
 def serve(state_path: Path, host: str = "127.0.0.1", port: int = 8788) -> None:
     server = HTTPServer((host, port), make_handler(Path(state_path)))
     server.serve_forever()
+
+
+def serve_with_reuse(state_path: Path, host: str = "127.0.0.1", port: int = 8788,
+                     attempts: int = 10, delay: float = 1.0) -> None:
+    """Serve on `port`, tolerating a socket still held by a dying process.
+
+    A supervisor restart can land in the window where the old listener has not
+    fully released the port. Without this the dashboard thread dies on a
+    silent OSError and the whole run looks broken while the agent still works.
+    """
+    last_error: OSError | None = None
+    for _ in range(attempts):
+        try:
+            serve(state_path, host, port)
+            return
+        except OSError as exc:
+            if exc.errno not in (errno.EADDRINUSE,):
+                raise
+            last_error = exc
+            time.sleep(delay)
+    raise RuntimeError(f"port {port} still busy after {attempts} attempts: {last_error}")

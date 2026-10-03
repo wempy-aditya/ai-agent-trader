@@ -17,8 +17,9 @@ from urllib.request import Request, urlopen
 
 from agent_loop import AgentTradingLoop
 from dashboard import DashboardState
-from dashboard_server import serve
+from dashboard_server import serve, serve_with_reuse
 from entry_agent import EntryModeAgent
+from equity_sampler import EquitySampler
 from hyperliquid_provider import HyperliquidBTC1hProvider
 from ledger_adapter import LocalPaperLedger
 from llm_agent import BACKEND_REMOTE, BaseAgent, build_agent
@@ -26,6 +27,8 @@ from remote_llm import CONFIG_PATH, RemoteLLMConfig, load_remote_config, save_re
 
 CONFIG = Path.home() / ".config/ai-trader/hermes-local.json"
 DATA = Path("data")
+# Paper capital. Every P/L figure on the dashboard is measured against this.
+INITIAL_CAPITAL = 1000.0
 
 
 def configure_remote(args) -> int:
@@ -94,6 +97,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=["ollama", BACKEND_REMOTE], default="ollama")
     parser.add_argument("--entry-mode", action="store_true", help="require the deterministic entry gate before a BUY survives")
+    parser.add_argument("--forever", action="store_true", help="keep polling indefinitely instead of stopping after --cycles")
     parser.add_argument("--model", default="qwen2.5:7b")
     parser.add_argument("--config", default="", help="remote LLM config path (mode 600)")
     parser.add_argument("--save-remote-config", action="store_true")
@@ -148,7 +152,8 @@ def main() -> int:
         print(json.dumps({"stop_reason": "llm_unavailable", "backend": args.backend, "model": active_model}))
         return 3
 
-    state = DashboardState(DATA / "agent_dashboard_state.json", reset=True)
+    state = DashboardState(DATA / "agent_dashboard_state.json", reset=True,
+                           initial_capital=INITIAL_CAPITAL)
 
     ledger = None
     ledger_error = None
@@ -173,11 +178,49 @@ def main() -> int:
     )
 
     if not args.no_dashboard:
-        threading.Thread(target=serve, args=(DATA / "agent_dashboard_state.json", "127.0.0.1", args.port), daemon=True).start()
-        state.update(status="running", model=active_model, execute=bool(args.execute))
+        threading.Thread(target=serve_with_reuse, args=(DATA / "agent_dashboard_state.json", "127.0.0.1", args.port), daemon=True).start()
+        state.update(status="running", model=active_model, execute=bool(args.execute),
+                     started_at_ms=int(time.time() * 1000))
+        # The loop only samples once per cycle, which can be a minute or more
+        # while a model answers. The sampler fills the curve in between so the
+        # dashboard reads as live instead of frozen. When there is no ledger
+        # (dry runs) it still records a flat curve so the chart has an axis.
+        def sample() -> dict[str, Any]:
+            if ledger is None:
+                return {"cash": None, "positions": [], "mark_price": None, "mark_exposure": None}
+            return fetch_snapshot(ledger, provider, int(time.time() * 1000))
+
+        sampler = EquitySampler(
+            DATA / "agent_dashboard_state.json",
+            sample,
+            initial_capital=INITIAL_CAPITAL,
+        )
+        sampler.start()
+
+        # Publish sampler health. A sampler that dies silently is worse than
+        # no chart at all: the dashboard keeps updating while the curve is
+        # frozen, which reads as "the agent is idle" instead of "this is broken".
+        def watch_sampler() -> None:
+            while True:
+                time.sleep(15)
+                DashboardState(DATA / "agent_dashboard_state.json").update(
+                    sampler_errors=sampler.errors,
+                    sampler_error=sampler.last_error,
+                    sampler_last_equity_ms=(DashboardState(DATA / "agent_dashboard_state.json").data.get("equity_curve") or [{}])[-1].get("at_ms"),
+                )
+
+        threading.Thread(target=watch_sampler, daemon=True).start()
+    else:
+        state.update(started_at_ms=int(time.time() * 1000))
 
     stop_reason = "max_cycles"
-    for index in range(args.cycles):
+    # --forever removes the cycle ceiling so the agent keeps polling on its own.
+    # The earlier default (a fixed cycle count) is why the process used to go
+    # quiet after a few cycles and look "finished".
+    total = None if args.forever else args.cycles
+    index = 0
+    while total is None or index < total:
+        index += 1
         now_ms = int(time.time() * 1000)
         try:
             snapshot = fetch_snapshot(ledger, provider, now_ms) if ledger else {"cash": None, "positions": [], "mark": None, "exposure": 0.0}
@@ -185,6 +228,15 @@ def main() -> int:
             state.add_error(f"ledger: {type(exc).__name__}")
             snapshot = {"cash": None, "positions": [], "mark": None, "exposure": 0.0}
         state.set_ledger(snapshot["cash"], snapshot["positions"], snapshot["mark"], snapshot["exposure"])
+        # Equity = cash + marked open positions, so an open trade that is up
+        # reads as a gain instead of looking like lost money.
+        state.record_equity({
+            "cash": snapshot["cash"],
+            "positions": snapshot["positions"],
+            "mark_price": snapshot["mark"],
+            "mark_exposure": snapshot["exposure"],
+            "at_ms": now_ms,
+        })
         result = loop.run_cycle(
             now_ms=now_ms,
             cash=float(snapshot["cash"] or 0.0) or 1000.0,
@@ -192,13 +244,18 @@ def main() -> int:
             open_position_quantity=sum(p["quantity"] for p in snapshot["positions"]),
         )
         payload = result.as_dict()
-        payload["cycle"] = index + 1
+        payload["cycle"] = index
         state.add_cycle(payload)
         print(json.dumps(payload, sort_keys=True), flush=True)
-        if not result.accepted and result.reason in {"invalid_candle", "unfinished_candle", "duplicate_candle"}:
-            continue
-        if index + 1 < args.cycles:
+        if total is None or index < total:
+            # Poll often so the equity curve moves and the dashboard looks
+            # live. This does NOT spam the LLM: the loop only calls the model
+            # on a closed candle we have not processed yet, so a short wait
+            # costs one local price read and nothing else.
             time.sleep(args.interval_seconds)
+
+    if args.forever:
+        stop_reason = "forever"
 
     state.update(status="stopped")
     print(json.dumps({
