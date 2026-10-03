@@ -191,4 +191,22 @@ indistinguishable from a silent model failure.
 Design, phase gates, evidence ledger, and next action are tracked in the Obsidian vault at
 `Projects/TRADING-AGENT/`, starting with `Project-State.md`.
 
-*Update terakhir: 2026-09-21*
+## Always-on mode
+
+The agent no longer stops after a fixed number of cycles.
+
+```bash
+bash supervise_agent.sh 60          # poll every 60s, restart on crash
+```
+
+- `--forever` removes the cycle ceiling in `run_agent.py`
+- `supervise_agent.sh` restarts the agent if it exits or stops serving
+- `equity_sampler.py` fills the equity curve between trading cycles
+- Dashboard shows equity, P/L, return and max drawdown as an SVG chart
+
+Equity is `cash + marked open positions`. It only changes when a new 1h candle
+closes, so a flat curve between hourly candles is correct, not a stall.
+`sampler_errors` and `sampler_error` in `/api/state` report sampler health; a
+non-zero count means the curve is not being updated.
+
+*Update terakhir: 2026-10-04*
